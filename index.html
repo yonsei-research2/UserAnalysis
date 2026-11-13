@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 활용역량 진단</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#f5f7f8; --surface:#ffffff; --fg:#1b2428; --muted:#5d6b72; --line:#d9e0e3;
+  --accent:#1f6f78; --accent-weak:#e3f0f1; --warn:#a85b12; --warn-weak:#fbefe2;
+  --font-display:"IBM Plex Sans KR","Noto Sans KR",system-ui,sans-serif;
+  --font-body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121a1d; --surface:#1a2428; --fg:#e4eaec; --muted:#9aa9af; --line:#2c3a3f;
+  --accent:#5fb3bb; --accent-weak:#1d3539; --warn:#e3a35f; --warn-weak:#3a2a19; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.6;
+  padding:28px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--font-display);text-wrap:balance;margin:0}
+h1{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.1rem;font-weight:600}
+p{margin:0}
+.lede{color:var(--muted)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+label.field{display:flex;flex-direction:column;gap:6px;font-size:.9rem;color:var(--muted)}
+input[type=text],input[type=number],select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
+.qcard{min-height:260px}
+.qmeta{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;color:var(--muted)}
+.qmeta .extra{color:var(--accent);font-weight:600}
+.qtext{font:600 1.25rem/1.55 var(--font-display);text-wrap:pretty}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans{appearance:none;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:600 1.05rem var(--font-display);padding:14px;border-radius:8px;cursor:pointer}
+.ans:hover{border-color:var(--accent)}
+.ans.yes{border-color:var(--accent);color:var(--accent)}
+.note{display:flex;flex-direction:column;gap:10px}
+.note label{font-size:.9rem;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--surface);font:600 .95rem var(--font-display);padding:10px 18px;border-radius:6px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.link{border:0;background:none;color:var(--muted);padding:6px 0;font-weight:500}
+.btn[disabled]{opacity:.5;cursor:default}
+.status{font-size:.9rem;color:var(--muted)}
+.done{background:var(--accent-weak);border-color:transparent}
+.fallback{background:var(--warn-weak);border-color:transparent}
+.fallback textarea{width:100%;min-height:140px;font:13px/1.5 ui-monospace,Consolas,monospace;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px}
+@media (max-width:520px){.qtext{font-size:1.1rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>AI 활용역량 진단</h1>
+    <p class="lede">연구할 때 AI를 어떻게 쓰는지 한 문장씩 묻습니다. '예' 또는 '아니오'로 답하면 진단이 끝나는 지점에서 넘어가고, 마지막에 숫자로 답하는 두 문항이 있습니다. 2~3분 정도 걸립니다.</p>
+  </header>
+
+  <form id="startBox" class="panel" novalidate>
+    <div class="meta">
+      <label class="field" for="pid">참여자 코드 (예: P01)
+        <input type="text" id="pid" maxlength="20" autocomplete="off" placeholder="P01">
+      </label>
+      <label class="field" for="course">과정
+        <select id="course">
+          <option value="">선택</option>
+          <option value="학석사연계">학석사연계</option>
+          <option value="석사">석사</option>
+          <option value="박사">박사</option>
+          <option value="기타">기타</option>
+        </select>
+      </label>
+    </div>
+    <p class="status">이름은 적지 않습니다.</p>
+    <div class="actions"><button class="btn" type="submit" id="startBtn">시작</button></div>
+  </form>
+
+  <div class="panel qcard" id="qBox" hidden>
+    <div class="qmeta"><span id="qCount"></span><span id="qExtra" class="extra"></span></div>
+    <p class="qtext" id="qText" aria-live="polite"></p>
+    <p class="status" id="qHint" hidden></p>
+    <div class="answers" id="answerBtns">
+      <button class="ans" type="button" id="btnYes">예</button>
+      <button class="ans" type="button" id="btnNo">아니오</button>
+    </div>
+    <div class="note" id="useBox" hidden>
+      <div class="meta">
+        <label class="field" for="useDaily">일상 활동 중 AI 활용 (%)
+          <input type="number" id="useDaily" min="0" max="100" step="1" inputmode="numeric">
+        </label>
+        <label class="field" for="useStudy">학업·연구 활동 중 AI 활용 (%)
+          <input type="number" id="useStudy" min="0" max="100" step="1" inputmode="numeric">
+        </label>
+      </div>
+      <div class="actions"><button class="btn" type="button" id="useNext">다음</button><span class="status" id="useMsg" role="status"></span></div>
+    </div>
+    <div class="note" id="verifyBox" hidden>
+      <label class="field" for="verifyPct" style="flex-direction:row;align-items:center;gap:8px;color:var(--fg);font-size:1rem">10건 중
+        <input type="number" id="verifyPct" min="0" max="10" step="1" inputmode="numeric" style="max-width:90px">
+        건
+      </label>
+      <div class="actions"><button class="btn" type="button" id="verifyNext">완료</button><span class="status" id="verifyMsg" role="status"></span></div>
+    </div>
+    <div class="note" id="noteBox" hidden>
+      <label for="noteInput">어떤 것이었는지 한 줄로 적어 주세요. (선택)</label>
+      <input type="text" id="noteInput" maxlength="200" autocomplete="off">
+      <div class="actions"><button class="btn" type="button" id="noteNext">다음</button></div>
+    </div>
+    <div class="actions"><button class="btn link" type="button" id="backBtn">← 이전 질문</button></div>
+  </div>
+
+  <div class="panel" id="sendingBox" hidden><p>응답을 저장하는 중입니다.</p></div>
+
+  <div class="panel done" id="doneBox" hidden>
+    <h2>진단이 끝났습니다</h2>
+    <p>응답해 주셔서 감사합니다.</p>
+    <div class="actions"><button class="btn ghost" type="button" id="again">새 응답 입력</button></div>
+  </div>
+
+  <div class="panel fallback" id="fallbackBox" hidden>
+    <h2>응답을 저장하지 못했습니다</h2>
+    <p>인터넷 연결을 확인한 뒤 다시 보내 주세요. 계속 안 되면 아래 내용을 복사해 연구자에게 보내 주세요.</p>
+    <textarea id="fallbackText" readonly></textarea>
+    <div class="actions">
+      <button class="btn" type="button" id="retryBtn">다시 보내기</button>
+      <button class="btn ghost" type="button" id="copyBtn">복사</button>
+      <span class="status" id="copyStatus" role="status"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// Apps Script 웹 앱 주소 (배포 후 받은 /exec 주소로 바꿉니다)
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbzaL8rZy5ucXHez0g9Mqnru7O82Kt5rdhfjDR6KY5OAeP8FXkSjEEGp5PMiKS9vNIDS/exec";
+// Apps Script의 FORM_KEY와 같은 값
+const FORM_KEY = "ai-diag-2026";
+
+const Q = {
+  S1:"Claude Code·Cursor 등으로 연구에 쓰는 프로그램이나 웹페이지를 직접 만들어 본 적이 있다.",
+  S2:"API를 연결하거나 n8n·Make 등으로 연구 업무 자동화를 구축한 적이 있다.",
+  S3:"AI 에이전트에 여러 단계 작업(예: 검색 → 정리 → 저장)을 맡겨 결과를 받은 적이 있다.",
+  S4:"AI로 만든 도구나 자동화를 지금도 연구에 계속 쓰거나 동료와 함께 쓴다.",
+  A1:"연구용 지침·자료를 넣은 Projects·GPTs·Gems를 만들어 두고 반복해서 쓴다.",
+  A2:"자주 하는 작업의 프롬프트나 작업 순서를 템플릿으로 정리해 두고 다시 쓴다.",
+  A3:"연구 단계마다 쓰는 AI 도구가 정해져 있다. (예: 문헌 탐색은 학술 DB의 AI, 분석은 다른 AI)",
+  A4:"AI에 자주 넣는 자료(논문 PDF·메모·데이터)를 바로 쓸 수 있게 폴더나 형식으로 정리해 둔다.",
+  M1:"여러 논문·파일을 AI에 올려 비교·분석하고 표나 보고서로 완성한 적이 있다.",
+  M2:"엑셀·PPT·보고서 같은 실제 결과물을 AI로 만들어 본 적이 있다.",
+  M3:"AI와 함께 데이터를 분석해 결과를 낸 적이 있다. (Python·R·SQL 코드 포함)",
+  B1:"ChatGPT·Claude 등에 질문해 번역·요약·문장 다듬기를 한다.",
+  B2:"모르는 개념이나 정보를 검색 대신 AI에 물어본다.",
+  B3:"이메일·초록·발표 문구 같은 짧은 글의 초안을 AI로 쓴다.",
+  B4:"연구 아이디어나 주제를 AI에게 물어보며 브레인스토밍한다."
+};
+const HINT = { S3:"예시: Claude Code, ChatGPT 에이전트 모드" };
+const IDS = Object.keys(Q);
+const ids = p => IDS.filter(k => k[0] === p);
+
+function plan(ans){
+  const asked = id => id in ans, yes = id => ans[id] === true;
+  const stage = (prefix, need) => {
+    const list = ids(prefix);
+    for (const id of list){
+      const y = list.filter(yes).length;
+      if (y >= need) return {met:true};
+      const open = list.filter(i => !asked(i)).length;
+      if (y + open < need) return {met:false};
+      if (!asked(id)) return {next:id};
+    }
+    return {met: list.filter(yes).length >= need};
+  };
+  let grade = null;
+  for (const [p, need, g] of [["S",1,4],["A",2,3],["M",2,2],["B",1,1]]){
+    const r = stage(p, need);
+    if (r.next) return {next:r.next};
+    if (r.met){ grade = g; break; }
+  }
+  if (grade === null) grade = 0;
+  return {done:true, grade};
+}
+const USE_Q = "일상 활동 전체, 학업·연구 활동 전체를 각각 100%로 볼 때, 그중 AI를 활용하는 비율은 몇 %인가요?";
+const USE_HINT = "두 값은 따로 적습니다. 예: 일상 20%, 학업·연구 60%";
+const VERIFY_Q = "AI를 통해 수집된 문헌·수치를 원자료에서 확인하는 빈도는 어떠한가요?";
+const VERIFY_HINT = "10건 중 몇 건을 확인하는지 0에서 10 사이 숫자로 적어 주세요.";
+const of10 = v => { const n = Number(v); return v !== "" && Number.isInteger(n) && n >= 0 && n <= 10 ? n : null; };
+const pct = v => { const n = Number(v); return v !== "" && Number.isFinite(n) && n >= 0 && n <= 100 ? Math.round(n) : null; };
+
+let ans = {}, notes = {}, order = [], current = null, use = null, verify = null, lastRec = null;
+const $ = id => document.getElementById(id);
+
+function showQuestion(){
+  const p = plan(ans);
+  $("useBox").hidden = true; $("verifyBox").hidden = true;
+  if (p.done){
+    const step = (id, n, q, hint, box, focus) => {
+      current = id;
+      $("qCount").textContent = (order.length + n) + "번째 질문";
+      $("qExtra").textContent = id === "VERIFY" ? "마지막 질문" : "";
+      $("qText").textContent = q;
+      $("qHint").textContent = hint; $("qHint").hidden = false;
+      $("answerBtns").hidden = true; $("noteBox").hidden = true;
+      $(box).hidden = false; $("backBtn").hidden = false;
+      $(focus).focus();
+    };
+    if (use === null) return step("USE", 1, USE_Q, USE_HINT, "useBox", "useDaily");
+    if (verify === null) return step("VERIFY", 2, VERIFY_Q, VERIFY_HINT, "verifyBox", "verifyPct");
+    return finish();
+  }
+  current = p.next;
+  $("qCount").textContent = (order.length + 1) + "번째 질문";
+  $("qExtra").textContent = "";
+  $("qText").textContent = Q[current];
+  $("qHint").textContent = HINT[current] || "";
+  $("qHint").hidden = !HINT[current];
+  $("answerBtns").hidden = false;
+  $("noteBox").hidden = true;
+  $("btnYes").classList.remove("yes");
+  $("backBtn").hidden = order.length === 0;
+  $("btnYes").focus();
+}
+function answer(val){
+  ans[current] = val; order.push(current);
+  if (val && current[0] !== "B"){
+    $("btnYes").classList.add("yes");
+    $("answerBtns").hidden = true;
+    $("noteInput").value = notes[current] || "";
+    $("noteBox").hidden = false;
+    $("noteInput").focus();
+    return;
+  }
+  delete notes[current];
+  showQuestion();
+}
+$("useNext").addEventListener("click", () => {
+  const d = pct($("useDaily").value), s = pct($("useStudy").value);
+  if (d === null || s === null){ $("useMsg").textContent = "두 칸 모두 0에서 100 사이 숫자를 적어 주세요."; return; }
+  $("useMsg").textContent = ""; use = {daily:d, study:s}; showQuestion();
+});
+$("verifyNext").addEventListener("click", () => {
+  const v = of10($("verifyPct").value);
+  if (v === null){ $("verifyMsg").textContent = "0에서 10 사이 정수를 적어 주세요."; return; }
+  $("verifyMsg").textContent = ""; verify = v; showQuestion();
+});
+[["useStudy","useNext"],["useDaily","useNext"],["verifyPct","verifyNext"]].forEach(([i,b]) =>
+  $(i).addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $(b).click(); } }));
+$("btnYes").addEventListener("click", () => answer(true));
+$("btnNo").addEventListener("click", () => answer(false));
+$("noteNext").addEventListener("click", () => {
+  const v = $("noteInput").value.trim();
+  if (v) notes[current] = v; else delete notes[current];
+  showQuestion();
+});
+$("noteInput").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("noteNext").click(); } });
+$("backBtn").addEventListener("click", () => {
+  if (current === "VERIFY"){ use = null; return showQuestion(); }
+  if (order.length){ const last = order.pop(); delete ans[last]; delete notes[last]; }
+  showQuestion();
+});
+$("startBox").addEventListener("submit", e => {
+  e.preventDefault();
+  ans = {}; notes = {}; order = []; use = null; verify = null;
+  ["useDaily","useStudy","verifyPct"].forEach(i => $(i).value = "");
+  $("startBox").hidden = true; $("qBox").hidden = false;
+  showQuestion();
+});
+
+// Sends to the Apps Script web app. text/plain avoids a CORS preflight; no-cors means
+// the reply cannot be read, so only a network failure is detected here.
+async function send(rec){
+  await fetch(ENDPOINT, {method:"POST", mode:"no-cors",
+    headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(rec)});
+}
+async function finish(){
+  lastRec = {
+    key: FORM_KEY,
+    pid: $("pid").value.trim(), course: $("course").value,
+    answers: {...ans}, notes: {...notes},
+    useDaily: use.daily, useStudy: use.study, verify
+  };
+  $("qBox").hidden = true; $("sendingBox").hidden = false;
+  try {
+    if (!/^https:\/\/script\.google\.com\//.test(ENDPOINT)) throw new Error("no endpoint");
+    await send(lastRec);
+    $("sendingBox").hidden = true; $("doneBox").hidden = false;
+  } catch (err) {
+    $("sendingBox").hidden = true;
+    $("fallbackText").value = recordText(lastRec);
+    $("fallbackBox").hidden = false;
+  }
+}
+$("retryBtn").addEventListener("click", async () => {
+  $("fallbackBox").hidden = true; $("sendingBox").hidden = false;
+  try { await send(lastRec); $("sendingBox").hidden = true; $("doneBox").hidden = false; }
+  catch(e){ $("sendingBox").hidden = true; $("fallbackBox").hidden = false; }
+});
+function recordText(r){
+  return [
+    "AI 활용역량 진단 응답",
+    "참여자 코드: " + (r.pid || "-"),
+    "과정: " + (r.course || "-"),
+    "답변: " + Object.entries(r.answers).map(([id,v]) => id + "=" + (v ? "예" : "아니오")).join(", "),
+    ...Object.entries(r.notes).map(([k,v]) => k + " 설명: " + v),
+    "AI 활용 비율: 일상 활동 중 " + r.useDaily + "% / 학업·연구 활동 중 " + r.useStudy + "%",
+    "원자료 확인 빈도: 10건 중 " + r.verify + "건"
+  ].join("\n");
+}
+$("copyBtn").addEventListener("click", () => {
+  const ta = $("fallbackText"), cs = $("copyStatus");
+  const sel = () => { ta.select(); cs.textContent = "텍스트를 선택했습니다. Ctrl+C로 복사해 주세요."; };
+  try { navigator.clipboard.writeText(ta.value).then(() => cs.textContent = "복사했습니다.", sel); } catch(e){ sel(); }
+});
+$("again").addEventListener("click", () => {
+  $("startBox").reset(); $("doneBox").hidden = true;
+  $("startBox").hidden = false; $("pid").focus();
+});
+</script>
+</body>
+</html>
