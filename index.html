@@ -64,8 +64,8 @@ input[type=text],input[type=number],select{font:inherit;color:var(--fg);backgrou
 
   <form id="startBox" class="panel" novalidate>
     <div class="meta">
-      <label class="field" for="pid">학번
-        <input type="text" id="pid" maxlength="20" autocomplete="off" placeholder="예: 2024123456">
+      <label class="field" for="pid">학번 (필수)
+        <input type="text" id="pid" maxlength="20" autocomplete="off" required aria-required="true" placeholder="예: 2024123456">
       </label>
       <label class="field" for="course">과정
         <select id="course">
@@ -78,7 +78,7 @@ input[type=text],input[type=number],select{font:inherit;color:var(--fg);backgrou
       </label>
     </div>
     
-    <div class="actions"><button class="btn" type="submit" id="startBtn">시작</button></div>
+    <div class="actions"><button class="btn" type="submit" id="startBtn">시작</button><span class="status" id="pidMsg" role="status" style="color:var(--warn)"></span></div>
   </form>
 
   <div class="panel qcard" id="qBox" hidden>
@@ -319,6 +319,8 @@ $("backBtn").addEventListener("click", () => {
 });
 $("startBox").addEventListener("submit", e => {
   e.preventDefault();
+  if (!$("pid").value.trim()){ $("pidMsg").textContent = "학번을 적어 주세요."; $("pid").focus(); return; }
+  $("pidMsg").textContent = "";
   ans = {}; notes = {}; order = []; paid = null; use = null; feats = null; verify = null;
   ["useDaily","useStudy","verifyPct","featOther","paidOther"].forEach(i => $(i).value = "");
   PAIDS.forEach((f, i) => $("paid" + i).checked = false); $("paidOther").hidden = true;
