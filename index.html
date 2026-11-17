@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI 활용역량 진단</title>
+<title>AI 활용 경험 조사</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
@@ -58,14 +58,14 @@ input[type=text],input[type=number],select{font:inherit;color:var(--fg);backgrou
 <body>
 <div class="wrap">
   <header style="display:flex;flex-direction:column;gap:8px">
-    <h1>AI 활용역량 진단</h1>
-    <p class="lede">연구할 때 AI를 어떻게 쓰는지 한 문장씩 묻습니다. '예' 또는 '아니오'로 답하면 진단이 끝나는 지점에서 넘어가고, 마지막에 숫자로 답하는 두 문항이 있습니다. 2~3분 정도 걸립니다.</p>
+    <h1>AI 활용 경험 조사</h1>
+    <p class="lede">연구할 때 AI를 어떻게 쓰고 있는지 한 문장씩 여쭙니다. '예' 또는 '아니오'로 답하면 답에 따라 다음 질문으로 넘어가고, 마지막에 AI 활용 전반에 관한 몇 가지를 묻습니다. 3~5분 정도 걸립니다.</p>
   </header>
 
   <form id="startBox" class="panel" novalidate>
     <div class="meta">
-      <label class="field" for="pid">참여자 코드 (예: P01)
-        <input type="text" id="pid" maxlength="20" autocomplete="off" placeholder="P01">
+      <label class="field" for="pid">학번
+        <input type="text" id="pid" maxlength="20" autocomplete="off" placeholder="예: 2024123456">
       </label>
       <label class="field" for="course">과정
         <select id="course">
@@ -77,7 +77,7 @@ input[type=text],input[type=number],select{font:inherit;color:var(--fg);backgrou
         </select>
       </label>
     </div>
-    <p class="status">이름은 적지 않습니다.</p>
+    
     <div class="actions"><button class="btn" type="submit" id="startBtn">시작</button></div>
   </form>
 
@@ -89,16 +89,26 @@ input[type=text],input[type=number],select{font:inherit;color:var(--fg);backgrou
       <button class="ans" type="button" id="btnYes">예</button>
       <button class="ans" type="button" id="btnNo">아니오</button>
     </div>
-    <div class="note" id="useBox" hidden>
-      <div class="meta">
-        <label class="field" for="useDaily">일상 활동 중 AI 활용 (%)
-          <input type="number" id="useDaily" min="0" max="100" step="1" inputmode="numeric">
-        </label>
-        <label class="field" for="useStudy">학업·연구 활동 중 AI 활용 (%)
-          <input type="number" id="useStudy" min="0" max="100" step="1" inputmode="numeric">
-        </label>
+    <div class="note" id="paidBox" hidden>
+        <div id="paidList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <input type="text" id="paidOther" maxlength="100" autocomplete="off" placeholder="기타 AI 이름을 적어 주세요" hidden>
+        <div class="actions"><button class="btn" type="button" id="paidNext">다음</button><span class="status" id="paidMsg" role="status"></span></div>
       </div>
-      <div class="actions"><button class="btn" type="button" id="useNext">다음</button><span class="status" id="useMsg" role="status"></span></div>
+      <div class="note" id="useBox" hidden>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <label class="field" for="useDaily" style="color:var(--fg);font-size:1rem;padding-bottom:12px;border-bottom:1px dashed var(--line)"><span><b>U1</b> 일상 활동 전체를 100%로 볼 때, 그중 AI를 활용하는 비율</span>
+            <span style="display:flex;align-items:center;gap:8px"><input type="number" id="useDaily" min="0" max="100" step="1" inputmode="numeric" style="max-width:120px"> %</span>
+          </label>
+          <label class="field" for="useStudy" style="color:var(--fg);font-size:1rem"><span><b>U2</b> 학업·연구 활동 전체를 100%로 볼 때, 그중 AI를 활용하는 비율</span>
+            <span style="display:flex;align-items:center;gap:8px"><input type="number" id="useStudy" min="0" max="100" step="1" inputmode="numeric" style="max-width:120px"> %</span>
+          </label>
+        </div>
+        <div class="actions"><button class="btn" type="button" id="useNext">다음</button><span class="status" id="useMsg" role="status"></span></div>
+    </div>
+    <div class="note" id="featBox" hidden>
+      <div id="featList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <input type="text" id="featOther" maxlength="100" autocomplete="off" placeholder="기타 내용을 적어 주세요" hidden>
+      <div class="actions"><button class="btn" type="button" id="featNext">다음</button><span class="status" id="featMsg" role="status"></span></div>
     </div>
     <div class="note" id="verifyBox" hidden>
       <label class="field" for="verifyPct" style="flex-direction:row;align-items:center;gap:8px;color:var(--fg);font-size:1rem">10건 중
@@ -118,7 +128,7 @@ input[type=text],input[type=number],select{font:inherit;color:var(--fg);backgrou
   <div class="panel" id="sendingBox" hidden><p>응답을 저장하는 중입니다.</p></div>
 
   <div class="panel done" id="doneBox" hidden>
-    <h2>진단이 끝났습니다</h2>
+    <h2>응답이 끝났습니다</h2>
     <p>응답해 주셔서 감사합니다.</p>
     <div class="actions"><button class="btn ghost" type="button" id="again">새 응답 입력</button></div>
   </div>
@@ -142,14 +152,18 @@ const ENDPOINT = "https://script.google.com/macros/s/AKfycbzaL8rZy5ucXHez0g9Mqnr
 const FORM_KEY = "ai-diag-2026";
 
 const Q = {
-  S1:"Claude Code·Cursor 등으로 연구에 쓰는 프로그램이나 웹페이지를 직접 만들어 본 적이 있다.",
-  S2:"API를 연결하거나 n8n·Make 등으로 연구 업무 자동화를 구축한 적이 있다.",
-  S3:"AI 에이전트에 여러 단계 작업(예: 검색 → 정리 → 저장)을 맡겨 결과를 받은 적이 있다.",
-  S4:"AI로 만든 도구나 자동화를 지금도 연구에 계속 쓰거나 동료와 함께 쓴다.",
+  S1:"Claude Code·Codex 등으로 연구에 쓰는 프로그램이나 웹페이지를 직접 만들어 본 적이 있다.",
+  S2:"노코드(No-code) 플랫폼(n8n·Make) 등으로 연구 업무 자동화를 구축한 적이 있다.",
+  S3:"MCP·API·플러그인 등을 직접 설정하여 AI가 외부 프로그램(예: Obsidian-Claude)의 자료를 읽거나 작업을 수행하도록 연결한 적이 있다.",
+  S4:"AI 에이전트가 검색·분석·정리 등 여러 단계의 연구 작업을 순차적으로 수행하도록 지시하고, 작업 결과를 검토한 적이 있다.",
+  S5:"AI로 만든 도구나 자동화를 동료와 공유하거나, 사용할 수 있도록 방법을 정리한 적이 있다.",
+  S6:"동일한 연구 작업에 여러 AI 모델이나 프롬프트를 적용해 결과를 비교하고, 더 적합한 방법으로 개선한 적이 있다.",
   A1:"연구용 지침·자료를 넣은 Projects·GPTs·Gems를 만들어 두고 반복해서 쓴다.",
   A2:"자주 하는 작업의 프롬프트나 작업 순서를 템플릿으로 정리해 두고 다시 쓴다.",
-  A3:"연구 단계마다 쓰는 AI 도구가 정해져 있다. (예: 문헌 탐색은 학술 DB의 AI, 분석은 다른 AI)",
+  A3:"연구 단계마다 쓰는 AI 도구가 정해져 있다. (예: 리서치는 Perplexity, 요약 및 분석은 Claude 등)",
   A4:"AI에 자주 넣는 자료(논문 PDF·메모·데이터)를 바로 쓸 수 있게 폴더나 형식으로 정리해 둔다.",
+  A5:"사용자 정의 명령어(슬래시 명령어)를 직접 만들거나, GitHub 등 온라인에 공개된 명령어를 사용해 본 적이 있다.",
+  A6:"AI에게 특정 역할(예: 논문 심사자 등)을 부여하여 답변하도록 지시한 적이 있다.",
   M1:"여러 논문·파일을 AI에 올려 비교·분석하고 표나 보고서로 완성한 적이 있다.",
   M2:"엑셀·PPT·보고서 같은 실제 결과물을 AI로 만들어 본 적이 있다.",
   M3:"AI와 함께 데이터를 분석해 결과를 낸 적이 있다. (Python·R·SQL 코드 포함)",
@@ -158,45 +172,70 @@ const Q = {
   B3:"이메일·초록·발표 문구 같은 짧은 글의 초안을 AI로 쓴다.",
   B4:"연구 아이디어나 주제를 AI에게 물어보며 브레인스토밍한다."
 };
-const HINT = { S3:"예시: Claude Code, ChatGPT 에이전트 모드" };
+const HINT = { S4:"예시: Claude Code, ChatGPT 에이전트 모드" };
 const IDS = Object.keys(Q);
 const ids = p => IDS.filter(k => k[0] === p);
+const GRADE_NAME = {3:"고급", 2:"중급", 1:"기초", 0:"미사용"};
 
-function plan(ans){
-  const asked = id => id in ans, yes = id => ans[id] === true;
-  const stage = (prefix, need) => {
-    const list = ids(prefix);
-    for (const id of list){
-      const y = list.filter(yes).length;
-      if (y >= need) return {met:true};
-      const open = list.filter(i => !asked(i)).length;
-      if (y + open < need) return {met:false};
-      if (!asked(id)) return {next:id};
-    }
-    return {met: list.filter(yes).length >= need};
-  };
-  let grade = null;
-  for (const [p, need, g] of [["S",1,4],["A",2,3],["M",2,2],["B",1,1]]){
-    const r = stage(p, need);
-    if (r.next) return {next:r.next};
-    if (r.met){ grade = g; break; }
-  }
-  if (grade === null) grade = 0;
-  return {done:true, grade};
+// Grading rules (2026-11-17)
+// 고급: (S '예' 3개 이상 + S1–S3 중 1개 이상) 또는 (A '예' 4개 이상 + M 모두 '예')
+// 중급: M 2개 이상 또는 A 3개 이상 또는 S 1개 이상
+// 기초: B 1개 이상 / 그 외: 미사용
+function gradeOf(a){
+  const yes = id => a[id] === true;
+  const n = p => ids(p).filter(yes).length;
+  if ((n("S") >= 3 && ["S1","S2","S3"].some(yes)) || (n("A") >= 4 && n("M") === ids("M").length)) return 3;
+  if (n("M") >= 2 || n("A") >= 3 || n("S") >= 1) return 2;
+  if (n("B") >= 1) return 1;
+  return 0;
 }
-const USE_Q = "일상 활동 전체, 학업·연구 활동 전체를 각각 100%로 볼 때, 그중 AI를 활용하는 비율은 몇 %인가요?";
-const USE_HINT = "두 값은 따로 적습니다. 예: 일상 20%, 학업·연구 60%";
+// Ask in order S → A → M → B; stop as soon as the remaining answers cannot change the grade.
+// Every rule only rises with more '예', so the grade is fixed when all-'아니오' and all-'예' for the unasked items agree.
+function plan(ans){
+  const fill = v => { const a = {...ans}; IDS.forEach(id => { if (!(id in a)) a[id] = v; }); return a; };
+  const lo = gradeOf(fill(false)), hi = gradeOf(fill(true));
+  if (lo === hi) return {done:true, grade:lo};
+  return {next: IDS.find(id => !(id in ans))};
+}
+
+// Questions asked once at the end, separately from the grade.
+const PAID_Q = "현재 유료로 구독 중인 AI는 무엇인가요?";
+const PAID_HINT = "해당하는 것을 모두 고릅니다. 구독하지 않으면 '유료 구독 없음'을 고릅니다.";
+const PAIDS = ["ChatGPT", "Gemini", "Claude", "Perplexity", "Microsoft Copilot", "기타", "유료 구독 없음"];
+const USE_Q = "일상과 학업·연구에서 AI를 활용하는 비율은 각각 몇 %인가요?";
+const USE_HINT = "두 비율은 서로 관계없이 따로 생각해서 적어 주세요. 합이 100이 될 필요는 없습니다.";
+const FEAT_Q = "최근 1개월 동안 사용한 AI 기능을 모두 선택해 주세요.";
+const FEAT_HINT = "해당하는 것을 모두 고릅니다.";
+const FEATS = ["일반 채팅(질문·답변, 번역, 요약 등)", "프로젝트·맞춤형 GPT 등 개인화 기능", "Artifacts 등 문서·웹페이지·코드 결과물 생성 기능",
+  "Work·에이전트 등 여러 단계의 작업 수행 기능", "MCP·커넥터 등 외부 프로그램 연동 기능", "API·n8n 등 자동화 기능", "기타"];
 const VERIFY_Q = "AI를 통해 수집된 문헌·수치를 원자료에서 확인하는 빈도는 어떠한가요?";
 const VERIFY_HINT = "10건 중 몇 건을 확인하는지 0에서 10 사이 숫자로 적어 주세요.";
 const of10 = v => { const n = Number(v); return v !== "" && Number.isInteger(n) && n >= 0 && n <= 10 ? n : null; };
 const pct = v => { const n = Number(v); return v !== "" && Number.isFinite(n) && n >= 0 && n <= 100 ? Math.round(n) : null; };
 
-let ans = {}, notes = {}, order = [], current = null, use = null, verify = null, lastRec = null;
+let paid = null; let ans = {}, notes = {}, order = [], current = null, use = null, feats = null, verify = null;
 const $ = id => document.getElementById(id);
+
+PAIDS.forEach((f, i) => {
+  const lab = document.createElement("label"); lab.style.cssText = "display:flex;gap:10px;align-items:flex-start;cursor:pointer";
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "paid" + i; cb.value = f; cb.style.cssText = "width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--accent)";
+  const sp = document.createElement("span"); sp.textContent = f;
+  lab.append(cb, sp); $("paidList").appendChild(lab);
+  if (f === "기타") cb.addEventListener("change", () => { $("paidOther").hidden = !cb.checked; if (cb.checked) $("paidOther").focus(); });
+  if (f === "유료 구독 없음") cb.addEventListener("change", () => { if (cb.checked) PAIDS.forEach((g, j) => { if (j !== i){ $("paid" + j).checked = false; } }); $("paidOther").hidden = true; });
+  else cb.addEventListener("change", () => { if (cb.checked) $("paid" + PAIDS.indexOf("유료 구독 없음")).checked = false; });
+});
+FEATS.forEach((f, i) => {
+  const lab = document.createElement("label"); lab.style.cssText = "display:flex;gap:10px;align-items:flex-start;cursor:pointer";
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "feat" + i; cb.value = f; cb.style.cssText = "width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--accent)";
+  const sp = document.createElement("span"); sp.textContent = f;
+  lab.append(cb, sp); $("featList").appendChild(lab);
+  if (f === "기타") cb.addEventListener("change", () => { $("featOther").hidden = !cb.checked; if (cb.checked) $("featOther").focus(); });
+});
 
 function showQuestion(){
   const p = plan(ans);
-  $("useBox").hidden = true; $("verifyBox").hidden = true;
+  ["paidBox","useBox","featBox","verifyBox"].forEach(b => $(b).hidden = true);
   if (p.done){
     const step = (id, n, q, hint, box, focus) => {
       current = id;
@@ -208,9 +247,11 @@ function showQuestion(){
       $(box).hidden = false; $("backBtn").hidden = false;
       $(focus).focus();
     };
-    if (use === null) return step("USE", 1, USE_Q, USE_HINT, "useBox", "useDaily");
-    if (verify === null) return step("VERIFY", 2, VERIFY_Q, VERIFY_HINT, "verifyBox", "verifyPct");
-    return finish();
+    if (paid === null) return step("PAID", 1, PAID_Q, PAID_HINT, "paidBox", "paid0");
+    if (use === null) return step("USE", 2, USE_Q, USE_HINT, "useBox", "useDaily");
+    if (feats === null) return step("FEAT", 3, FEAT_Q, FEAT_HINT, "featBox", "feat0");
+    if (verify === null) return step("VERIFY", 4, VERIFY_Q, VERIFY_HINT, "verifyBox", "verifyPct");
+    return finish(p);
   }
   current = p.next;
   $("qCount").textContent = (order.length + 1) + "번째 질문";
@@ -237,17 +278,29 @@ function answer(val){
   delete notes[current];
   showQuestion();
 }
+$("paidNext").addEventListener("click", () => {
+  const list = PAIDS.filter((f, i) => $("paid" + i).checked);
+  if (!list.length){ $("paidMsg").textContent = "하나 이상 골라 주세요."; return; }
+  const other = list.includes("기타") ? $("paidOther").value.trim() : "";
+  $("paidMsg").textContent = ""; paid = {list, other}; showQuestion();
+});
 $("useNext").addEventListener("click", () => {
   const d = pct($("useDaily").value), s = pct($("useStudy").value);
   if (d === null || s === null){ $("useMsg").textContent = "두 칸 모두 0에서 100 사이 숫자를 적어 주세요."; return; }
   $("useMsg").textContent = ""; use = {daily:d, study:s}; showQuestion();
+});
+$("featNext").addEventListener("click", () => {
+  const list = FEATS.filter((f, i) => $("feat" + i).checked);
+  if (!list.length){ $("featMsg").textContent = "하나 이상 골라 주세요."; return; }
+  const other = list.includes("기타") ? $("featOther").value.trim() : "";
+  $("featMsg").textContent = ""; feats = {list, other}; showQuestion();
 });
 $("verifyNext").addEventListener("click", () => {
   const v = of10($("verifyPct").value);
   if (v === null){ $("verifyMsg").textContent = "0에서 10 사이 정수를 적어 주세요."; return; }
   $("verifyMsg").textContent = ""; verify = v; showQuestion();
 });
-[["useStudy","useNext"],["useDaily","useNext"],["verifyPct","verifyNext"]].forEach(([i,b]) =>
+[["paidOther","paidNext"],["useStudy","useNext"],["useDaily","useNext"],["featOther","featNext"],["verifyPct","verifyNext"]].forEach(([i,b]) =>
   $(i).addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $(b).click(); } }));
 $("btnYes").addEventListener("click", () => answer(true));
 $("btnNo").addEventListener("click", () => answer(false));
@@ -258,17 +311,22 @@ $("noteNext").addEventListener("click", () => {
 });
 $("noteInput").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("noteNext").click(); } });
 $("backBtn").addEventListener("click", () => {
-  if (current === "VERIFY"){ use = null; return showQuestion(); }
+  if (current === "VERIFY"){ feats = null; return showQuestion(); }
+  if (current === "FEAT"){ use = null; return showQuestion(); }
+  if (current === "USE"){ paid = null; return showQuestion(); }
   if (order.length){ const last = order.pop(); delete ans[last]; delete notes[last]; }
   showQuestion();
 });
 $("startBox").addEventListener("submit", e => {
   e.preventDefault();
-  ans = {}; notes = {}; order = []; use = null; verify = null;
-  ["useDaily","useStudy","verifyPct"].forEach(i => $(i).value = "");
+  ans = {}; notes = {}; order = []; paid = null; use = null; feats = null; verify = null;
+  ["useDaily","useStudy","verifyPct","featOther","paidOther"].forEach(i => $(i).value = "");
+  PAIDS.forEach((f, i) => $("paid" + i).checked = false); $("paidOther").hidden = true;
+  FEATS.forEach((f, i) => $("feat" + i).checked = false); $("featOther").hidden = true;
   $("startBox").hidden = true; $("qBox").hidden = false;
   showQuestion();
 });
+let lastRec = null;
 
 // Sends to the Apps Script web app. text/plain avoids a CORS preflight; no-cors means
 // the reply cannot be read, so only a network failure is detected here.
@@ -281,7 +339,8 @@ async function finish(){
     key: FORM_KEY,
     pid: $("pid").value.trim(), course: $("course").value,
     answers: {...ans}, notes: {...notes},
-    useDaily: use.daily, useStudy: use.study, verify
+    paid: paid.list, paidOther: paid.other, useDaily: use.daily, useStudy: use.study,
+    features: feats.list, featuresOther: feats.other, verify
   };
   $("qBox").hidden = true; $("sendingBox").hidden = false;
   try {
@@ -301,12 +360,14 @@ $("retryBtn").addEventListener("click", async () => {
 });
 function recordText(r){
   return [
-    "AI 활용역량 진단 응답",
-    "참여자 코드: " + (r.pid || "-"),
+    "AI 활용 경험 조사 응답",
+    "학번: " + (r.pid || "-"),
     "과정: " + (r.course || "-"),
     "답변: " + Object.entries(r.answers).map(([id,v]) => id + "=" + (v ? "예" : "아니오")).join(", "),
     ...Object.entries(r.notes).map(([k,v]) => k + " 설명: " + v),
+    "유료 구독 AI: " + r.paid.join(", ") + (r.paidOther ? " (기타: " + r.paidOther + ")" : ""),
     "AI 활용 비율: 일상 활동 중 " + r.useDaily + "% / 학업·연구 활동 중 " + r.useStudy + "%",
+    "최근 1개월 사용 기능: " + r.features.join(", ") + (r.featuresOther ? " (기타: " + r.featuresOther + ")" : ""),
     "원자료 확인 빈도: 10건 중 " + r.verify + "건"
   ].join("\n");
 }
